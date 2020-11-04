@@ -46,7 +46,7 @@ public class HomeScene implements Initializable {
     public void startGame(ActionEvent actionEvent) throws IOException {
         if (player1.getText().equals("")) player1.setText("Player1");
         if (player2.getText().equals("")) {
-            if (gameModeComboBox.getValue().equals("Human vs Computer")) player2.setText("Player2");
+            if (gameModeComboBox.getValue().equals("Human vs Human")) player2.setText("Player2");
             else player2.setText("Computer");
         }
         String data = gameSizeComboBox.getValue().charAt(0) + "&&&&" + gameModeComboBox.getValue() + "&&&&" + player1.getText() + "&&&&" + player2.getText();

@@ -37,11 +37,11 @@
                   </Label>
                </children>
             </VBox>
-            <Region prefHeight="74.0" prefWidth="101.0" HBox.hgrow="ALWAYS" />
-            <GridPane>
+            <Region prefHeight="74.0" prefWidth="105.0" HBox.hgrow="ALWAYS" />
+            <GridPane prefHeight="74.0" prefWidth="231.0">
               <columnConstraints>
-                <ColumnConstraints halignment="LEFT" hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                <ColumnConstraints halignment="LEFT" hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                <ColumnConstraints halignment="LEFT" hgrow="SOMETIMES" maxWidth="110.20001220703125" minWidth="10.0" prefWidth="97.39996337890625" />
+                <ColumnConstraints halignment="LEFT" hgrow="SOMETIMES" maxWidth="132.60003662109375" minWidth="10.0" prefWidth="132.60003662109375" />
               </columnConstraints>
               <rowConstraints>
                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
