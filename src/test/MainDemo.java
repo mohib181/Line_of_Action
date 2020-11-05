@@ -1,4 +1,7 @@
-package game;
+package test;
+
+import game.Constants;
+import game.Position;
 
 import java.util.ArrayList;
 import java.util.LinkedList;

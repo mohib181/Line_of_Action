@@ -130,23 +130,6 @@ public class Player {
         return moves;
     }
 
-    public void showAllMoves(char[][] board, char color) {
-        ArrayList<Position> moves;
-        System.out.println("Color: " + color);
-        for (int i = 0; i < board.length; i++) {
-            for (int j = 0; j < board.length; j++) {
-                if (board[i][j] == color) {
-                    moves = generateMoves(board, i, j);
-
-                    for (Position pos: moves) {
-                        System.out.println("(" + i + "," + j + ")" + "--->(" + pos.getX() + "," + pos.getY() + ")");
-                    }
-                    System.out.println();
-                }
-            }
-        }
-    }
-
     public char makeMove(char[][] board, int row, int col, int moveAheadRow, int moveAheadCol) {
         char value = board[moveAheadRow][moveAheadCol];
         board[moveAheadRow][moveAheadCol] = board[row][col];
@@ -158,104 +141,5 @@ public class Player {
     public void undoMove(char[][] board, int row, int col, int moveAheadRow, int moveAheadCol, char prevValue) {
         board[row][col] = board[moveAheadRow][moveAheadCol];
         board[moveAheadRow][moveAheadCol] = prevValue;
-    }
-
-    public static int evaluateBoard(char[][] board) {
-        int[][] scoreTable = new int[board.length][board.length];
-
-        return 0;
-    }
-
-    public int minimax(char[][] board, int depth, int alpha, int beta, boolean isBlack) {
-        int value;
-        if (depth == 0) {
-            return evaluateBoard(board);
-        }
-
-        if (isBlack) {
-            value = Constants.MINVALUE;
-
-            //for all black piece
-            //calculate their move set
-            //then for all those moves
-            ArrayList<Position> moves;
-            for (int i = 0; i < board.length; i++) {
-                for (int j = 0; j < board.length; j++) {
-                    if (board[i][j] == 'b') {
-                        moves = generateMoves(board, i, j);
-
-                        for (Position pos: moves) {
-                            //System.out.println("(" + i + "," + j + ")" + "--->(" + pos.getX() + "," + pos.getY() + ")");
-                            char prevValue = makeMove(board, i, j, pos.getX(), pos.getY());
-
-                            value = Math.max(value, minimax(board, depth-1, alpha, beta, false));
-
-                            undoMove(board, i, j, pos.getX(), pos.getY(), prevValue);
-
-                            alpha = Math.max(alpha, value);
-                            if (alpha >= beta) break;
-                        }
-                    }
-                }
-            }
-        }
-        else {
-            value = Constants.MAXVALUE;
-
-            ArrayList<Position> moves;
-            for (int i = 0; i < board.length; i++) {
-                for (int j = 0; j < board.length; j++) {
-                    if (board[i][j] == 'w') {
-                        moves = generateMoves(board, i, j);
-
-                        for (Position pos: moves) {
-                            //System.out.println("(" + i + "," + j + ")" + "--->(" + pos.getX() + "," + pos.getY() + ")");
-                            char prevValue = makeMove(board, i, j, pos.getX(), pos.getY());
-
-                            value = Math.min(value, minimax(board, depth-1, alpha, beta, true));
-
-                            undoMove(board, i, j, pos.getX(), pos.getY(), prevValue);
-
-                            beta = Math.min(beta, value);
-                            if (beta <= alpha) break;
-                        }
-                    }
-                }
-            }
-        }
-        return value;
-    }
-
-    public void findBestMove(char[][] board, char color) {
-        int currMoveVal;
-        int bestMoveVal = -1000;
-        int row = -1, col = -1;
-        int bestRow = -1, bestCol = -1;
-
-        ArrayList<Position> moves;
-        for (int i = 0; i < board.length; i++) {
-            for (int j = 0; j < board.length; j++) {
-                if (board[i][j] == color) {
-                    moves = generateMoves(board, i, j);
-
-                    for (Position pos : moves) {
-                        char prevValue = makeMove(board, i, j, pos.getX(), pos.getY());
-
-                        currMoveVal = minimax(board, 5, Constants.MINVALUE, Constants.MAXVALUE, true);
-
-                        undoMove(board, i, j, pos.getX(), pos.getY(), prevValue);
-
-                        if (currMoveVal > bestMoveVal) {
-                            row = i;
-                            col = j;
-                            bestRow = pos.getX();
-                            bestCol = pos.getY();
-                        }
-                    }
-                }
-            }
-        }
-
-        System.out.println("(" + row + "," + col + ")--->(" + bestRow + "," + bestCol + ")");
     }
 }

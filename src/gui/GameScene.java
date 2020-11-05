@@ -1,7 +1,8 @@
 package gui;
 
+import game.ComputerPlayer;
 import game.Game;
-import game.MainDemo;
+import game.Player;
 import game.Position;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;
@@ -24,15 +25,13 @@ import java.util.Random;
 
 
 public class GameScene {
-    public int gameSize;
-    public String gameMode;
-    public String player1;
-    public String player2;
     public Game game;
-    public Position selectedPos;
+    public Player winner;
+    public Player player1;
+    public Player player2;
+    public String gameMode;
+    public Player currentPlayer;
     public Circle selectedCircle;
-    public String currentPlayer;
-    public String winner;
 
     public Button back;
     public GridPane board;
@@ -49,33 +48,31 @@ public class GameScene {
     public void initGame(String string) {
         //game data Initialization
         String[] data = string.split("&&&&");
-        gameSize = Integer.parseInt(data[0]);
-        gameMode = data[1];
-        player1 = data[2];
-        player2 = data[3];
 
-        gameSizeLabel.setText(": " + data[0]);
+        gameSizeLabel.setText(": " + data[0] + "x" + data[0]);
         gameModeLabel.setText(": " + data[1]);
         player1NameLabel.setText(data[2]);
         player2NameLabel.setText(data[3]);
+        gameMode = data[1];
 
         Random random = new Random(System.currentTimeMillis());
         int r = Math.abs(random.nextInt(100));
 
         String color = (r%2 == 0) ? "White" : "Black";
         String opponentColor = color.equals("White") ? "Black" : "White";
-        System.out.println(color + " " + opponentColor);
+
+        player1 = new Player(color.equals("White") ? 'w' : 'b', data[2]);
+        player2 = new Player(opponentColor.equals("White") ? 'w' : 'b', data[3]);
 
         player1ColorLabel.setText(": " + color);
         player2ColorLabel.setText(": " + opponentColor);
 
-        currentPlayer = color.equals("White") ? player1 : player2;
-        turnLabel.setText(currentPlayer + "'s Turn");
-        moveLabel.setText("Move generated in: ");
-
+        currentPlayer = (player1.getPlayerColor() == 'b') ? player1 : player2;
+        turnLabel.setText(currentPlayer.getPlayerName() + "'s Turn");
+        turnSetUp();
 
         //game board Initialization
-        int n = gameSize;
+        int n = Integer.parseInt(data[0]);
         for (int i = 0; i < n; i++) {
             ColumnConstraints colConst = new ColumnConstraints();
             colConst.setPercentWidth(100.0 / n);
@@ -109,10 +106,25 @@ public class GameScene {
         game = new Game(n);
     }
 
+    public void turnSetUp() {
+        String color = (currentPlayer.getPlayerColor() == 'w') ? "WHITE" : "BLACK";
+        for (Node node: board.getChildren()) {
+            if (node instanceof Circle) {
+                node.setDisable(!node.getId().equals(color));
+            }
+        }
+        turnLabel.setText(currentPlayer.getPlayerName() + "'s Turn");
+        if (gameMode.equals("Human vs Computer") && currentPlayer.getPlayerName().equals("Computer")) {
+            //do something with AI
+            moveLabel.setText("Computer Gave Move");
+        }
+        else moveLabel.setText("");
+    }
+
     public Circle createCircle(int row, int col, double radius, String color) {
         Circle circle = new Circle(radius);
 
-        circle.setId(color + "_" + row + "_" + col);
+        circle.setId(color);
         circle.setFill(Paint.valueOf(color));
         circle.getProperties().put("gridpane-row", row);
         circle.getProperties().put("gridpane-column", col);
@@ -132,10 +144,15 @@ public class GameScene {
     }
 
     public void resetAllPane() {
-        int n = gameSize*gameSize;
+        for (Node node: board.getChildren()) {
+            if (node instanceof Pane) {
+                node.setStyle("-fx-background-color: #3C64A3; -fx-border-color: #000000");
+            }
+        }
+        /*
         for (int i = 0; i < n; i++) {
             board.getChildren().get(i).setStyle("-fx-background-color: #3C64A3; -fx-border-color: #000000");
-        }
+        }*/
     }
 
     public void makeMove(Circle circle, Pane pane) {
@@ -152,82 +169,65 @@ public class GameScene {
 
         board.getChildren().add(circle);
 
-        MainDemo.makeMove(game.getBoard(), row, col, moveAheadRow, moveAheadCol);
+        currentPlayer.makeMove(game.getBoard(), row, col, moveAheadRow, moveAheadCol);
 
-        String color = (currentPlayer.equals(player1)) ? player1ColorLabel.getText() : player2ColorLabel.getText();
-        char c = color.equals("White") ? 'w' : 'b';
+        char color = (currentPlayer.getPlayerName().equals(player1.getPlayerName())) ? player1.getPlayerColor() : player2.getPlayerColor();
+        char opponentColor = (color == 'w') ? 'b' : 'w';
 
-        char ch = MainDemo.endStateAchieved(game.getBoard(), c);
-        if (ch == '-') {
-            currentPlayer = currentPlayer.equals(player2) ? player1 : player2;
-            turnLabel.setText(currentPlayer + "'s Turn");
-            //moveLabel.setText("Move generated in: ");
+        if (game.isConnected(color)) {
+            winner = currentPlayer;
+            turnLabel.setText(winner.getPlayerName() + " has won");
+            board.setDisable(true);
         }
-        else if (ch == 'w') {
-            if (ch == c) winner = currentPlayer;
-            else winner = currentPlayer.equals(player2) ? player1 : player2;
-            turnLabel.setText(winner + "has won");
+        else if (game.isConnected(opponentColor)) {
+            winner = (currentPlayer.getPlayerName().equals(player1.getPlayerName())) ? player1 : player2;
+            turnLabel.setText(winner.getPlayerName() + " has won");
             board.setDisable(true);
         }
         else {
-            if (ch == c) winner = currentPlayer;
-            else winner = currentPlayer.equals(player2) ? player1 : player2;
-            turnLabel.setText(winner + "has won");
-            board.setDisable(true);
+            currentPlayer = (currentPlayer.getPlayerName().equals(player1.getPlayerName())) ? player2 : player1;
+            turnSetUp();
         }
     }
 
     public void clickOnPane(MouseEvent mouseEvent) {
         Pane pane = (Pane) mouseEvent.getSource();
-        System.out.println(pane.getStyle());
         if (pane.getStyle().equals("-fx-background-color: #00d974; -fx-border-color: #000000")) {
             System.out.println("making a move");
             makeMove(selectedCircle, pane);
-        }
-        else{
-            System.out.println("just");
         }
         resetAllPane();
     }
 
     public void showMoves(MouseEvent mouseEvent) {
         resetAllPane();
-        Circle circle = (Circle) mouseEvent.getSource();
+        selectedCircle = (Circle) mouseEvent.getSource();
+        System.out.println("row: " + selectedCircle.getProperties().get("gridpane-row") + ",col: " + selectedCircle.getProperties().get("gridpane-column"));
 
-        System.out.println("ID: " + circle.getId());
-        System.out.println("row: " + circle.getProperties().get("gridpane-row"));
-        System.out.println("col: " + circle.getProperties().get("gridpane-column"));
-
-
-        int row = (int) circle.getProperties().get("gridpane-row");
-        int col = (int) circle.getProperties().get("gridpane-column");
-
-        selectedPos = new Position(row, col);
-        selectedCircle = circle;
-        //System.out.println("selected: " +row + "," + col + "\nmoves:");
+        int row = (int) selectedCircle.getProperties().get("gridpane-row");
+        int col = (int) selectedCircle.getProperties().get("gridpane-column");
 
         int index = row*board.getColumnCount()+col;
         board.getChildren().get(index).setStyle("-fx-background-color: #fcba03; -fx-border-color: #000000");
 
-        ArrayList<Position> moves = MainDemo.generateMoves(game.getBoard(), row, col);
+        ArrayList<Position> moves = currentPlayer.generateMoves(game.getBoard(), row, col);
         for (Position pos: moves) {
-            //System.out.println(pos.getX() + "," + pos.getY());
             index = pos.getX()*board.getColumnCount()+pos.getY();
             board.getChildren().get(index).setStyle("-fx-background-color: #00d974; -fx-border-color: #000000");
         }
-
-        System.out.println("done");
+        System.out.println("Showed All Possible Moves");
     }
 
     public void backToHomeScene(ActionEvent actionEvent) throws IOException {
         Parent homePageParent = FXMLLoader.load(getClass().getResource("homeScene.fxml"));
         Scene homePageScene = new Scene(homePageParent);
 
-        Stage window = (Stage)((Node)actionEvent.getSource()).getScene().getWindow();
+        Stage stage = (Stage)((Node)actionEvent.getSource()).getScene().getWindow();
 
-        window.setScene(homePageScene);
-        window.setWidth(600);
-        window.setHeight(300);
-        window.show();
+        stage.setScene(homePageScene);
+        stage.setTitle("Line of Action|Home");
+        stage.setWidth(600);
+        stage.setHeight(300);
+        stage.show();
     }
 }
