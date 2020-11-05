@@ -1,4 +1,4 @@
-package game;
+package test;
 
 public interface Constants {
     int MAXVALUE = 100000;

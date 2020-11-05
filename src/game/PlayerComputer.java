@@ -1,10 +1,8 @@
 package game;
 
-import javafx.geometry.Pos;
-
 import java.util.ArrayList;
 
-public class ComputerPlayer extends Player {
+public class PlayerComputer extends Player {
     final static int MAXVALUE = 100000;
     final static int MINVALUE = -100000;
 
@@ -12,7 +10,7 @@ public class ComputerPlayer extends Player {
     ArrayList<Position> pieces;
     ArrayList<Position> opponentPieces;
 
-    public ComputerPlayer(char playerColor, String playerName) {
+    public PlayerComputer(char playerColor, String playerName) {
         super(playerColor, playerName);
         opponentColor = (playerColor == 'w') ? 'b' : 'w';
         pieces = new ArrayList<>();
@@ -188,6 +186,7 @@ public class ComputerPlayer extends Player {
         ArrayList<Position> moves = new ArrayList<>();
         for (Position piece: pieces) {
             moves = generateMoves(board, piece.x, piece.y);
+            System.out.println(moves);
 
             for (Position pos : moves) {
                 prev = new Position(piece.x, piece.y);

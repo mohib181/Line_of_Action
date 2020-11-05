@@ -71,7 +71,7 @@ public class HomeScene implements Initializable {
         Stage stage = (Stage)((Node)actionEvent.getSource()).getScene().getWindow();
 
         stage.setScene(gamePageScene);
-        stage.setTitle("Line of Action|Game");
+        stage.setTitle("Line of Action | Game");
         stage.setWidth(600);
         stage.setHeight(600);
         stage.show();

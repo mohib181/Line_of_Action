@@ -1,6 +1,6 @@
 package gui;
 
-import game.ComputerPlayer;
+import game.PlayerComputer;
 import game.Game;
 import game.Player;
 import game.Position;
@@ -25,6 +25,8 @@ import java.util.Random;
 
 
 public class GameScene {
+    public int depth;
+    public int gameSize;
     public Game game;
     public Player winner;
     public Player player1;
@@ -32,6 +34,7 @@ public class GameScene {
     public String gameMode;
     public Player currentPlayer;
     public Circle selectedCircle;
+    public PlayerComputer playerComputer;
 
     public Button back;
     public GridPane board;
@@ -53,6 +56,8 @@ public class GameScene {
         gameModeLabel.setText(": " + data[1]);
         player1NameLabel.setText(data[2]);
         player2NameLabel.setText(data[3]);
+
+        gameSize = Integer.parseInt(data[0]);
         gameMode = data[1];
 
         Random random = new Random(System.currentTimeMillis());
@@ -63,16 +68,21 @@ public class GameScene {
 
         player1 = new Player(color.equals("White") ? 'w' : 'b', data[2]);
         player2 = new Player(opponentColor.equals("White") ? 'w' : 'b', data[3]);
+        if (gameMode.equals("Human vs Computer")) {
+            playerComputer = new PlayerComputer(player2.getPlayerColor(), player2.getPlayerName());
+            if (gameSize == 6) depth = 4;
+            else if (gameSize == 8) depth = 4;
+        }
+
 
         player1ColorLabel.setText(": " + color);
         player2ColorLabel.setText(": " + opponentColor);
 
         currentPlayer = (player1.getPlayerColor() == 'b') ? player1 : player2;
         turnLabel.setText(currentPlayer.getPlayerName() + "'s Turn");
-        turnSetUp();
 
         //game board Initialization
-        int n = Integer.parseInt(data[0]);
+        int n = gameSize;
         for (int i = 0; i < n; i++) {
             ColumnConstraints colConst = new ColumnConstraints();
             colConst.setPercentWidth(100.0 / n);
@@ -104,27 +114,59 @@ public class GameScene {
 
         //game initialization
         game = new Game(n);
+        turnSetUp();
     }
 
-    public void turnSetUp() {
+    public Circle searchCircleByID(String circleID) {
+        for (Node node: board.getChildren()) {
+            if (node instanceof Circle) {
+                if (node.getId().contains(circleID)) return (Circle) node;
+            }
+        }
+        return null;
+    }
+
+    public void turnSetUp() throws ClassCastException {
         String color = (currentPlayer.getPlayerColor() == 'w') ? "WHITE" : "BLACK";
         for (Node node: board.getChildren()) {
             if (node instanceof Circle) {
-                node.setDisable(!node.getId().equals(color));
+                node.setDisable(!node.getId().startsWith(color));
             }
         }
-        turnLabel.setText(currentPlayer.getPlayerName() + "'s Turn");
-        if (gameMode.equals("Human vs Computer") && currentPlayer.getPlayerName().equals("Computer")) {
-            //do something with AI
-            moveLabel.setText("Computer Gave Move");
+        turnLabel.setText(currentPlayer.getPlayerName() + "(" + color + ")'s Turn");
+
+        if (currentPlayer.getPlayerName().equals("Computer") && playerComputer != null) {
+            System.out.println("Computer should Give a move");
+            ArrayList<Position> move = playerComputer.findBestMove(game.getBoard(), depth);
+            if (move.size() > 0) {
+                int index;
+                int row = move.get(0).getX();
+                int col = move.get(0).getY();
+                int moveAheadRow = move.get(1).getX();
+                int moveAheadCol = move.get(1).getY();
+                System.out.println(row + "," + col + "--->" + moveAheadRow + "," + moveAheadCol);
+
+                index = moveAheadRow*board.getColumnCount()+moveAheadCol;
+                Pane pane = (Pane) board.getChildren().get(index);
+
+                Circle circle = searchCircleByID(color + "_" + row + "_" + col);
+                if (circle != null) {
+                    makeMove(circle, pane);
+                }else {
+                    System.out.println("Not Found");
+                }
+                moveLabel.setText("Computer has made a move");
+            } else {
+                moveLabel.setText("Computer has no move");
+            }
         }
-        else moveLabel.setText("");
+        else moveLabel.setText(" ");
     }
 
     public Circle createCircle(int row, int col, double radius, String color) {
         Circle circle = new Circle(radius);
 
-        circle.setId(color);
+        circle.setId(color + "_" + row + "_" + col);
         circle.setFill(Paint.valueOf(color));
         circle.getProperties().put("gridpane-row", row);
         circle.getProperties().put("gridpane-column", col);
@@ -161,11 +203,18 @@ public class GameScene {
         int moveAheadRow = (int) pane.getProperties().get("gridpane-row");
         int moveAheadCol = (int) pane.getProperties().get("gridpane-column");
 
+        String moveAheadCircleID = moveAheadRow + "_" + moveAheadCol;
+        Circle moveAheadCircle = searchCircleByID(moveAheadCircleID);
+        if (moveAheadCircle != null) board.getChildren().remove(moveAheadCircle);
+
         board.getChildren().remove(circle);
 
         circle.getProperties().clear();
         circle.getProperties().put("gridpane-row", moveAheadRow);
         circle.getProperties().put("gridpane-column", moveAheadCol);
+
+        String circleID = circle.getId().replace("_" + row + "_" + col, "_" + moveAheadRow + "_" + moveAheadCol);
+        circle.setId(circleID);
 
         board.getChildren().add(circle);
 
@@ -193,7 +242,7 @@ public class GameScene {
     public void clickOnPane(MouseEvent mouseEvent) {
         Pane pane = (Pane) mouseEvent.getSource();
         if (pane.getStyle().equals("-fx-background-color: #00d974; -fx-border-color: #000000")) {
-            System.out.println("making a move");
+            //System.out.println("making a move");
             makeMove(selectedCircle, pane);
         }
         resetAllPane();
@@ -202,7 +251,7 @@ public class GameScene {
     public void showMoves(MouseEvent mouseEvent) {
         resetAllPane();
         selectedCircle = (Circle) mouseEvent.getSource();
-        System.out.println("row: " + selectedCircle.getProperties().get("gridpane-row") + ",col: " + selectedCircle.getProperties().get("gridpane-column"));
+        //System.out.println("row: " + selectedCircle.getProperties().get("gridpane-row") + ",col: " + selectedCircle.getProperties().get("gridpane-column"));
 
         int row = (int) selectedCircle.getProperties().get("gridpane-row");
         int col = (int) selectedCircle.getProperties().get("gridpane-column");
@@ -215,7 +264,7 @@ public class GameScene {
             index = pos.getX()*board.getColumnCount()+pos.getY();
             board.getChildren().get(index).setStyle("-fx-background-color: #00d974; -fx-border-color: #000000");
         }
-        System.out.println("Showed All Possible Moves");
+        //System.out.println("Showed All Possible Moves");
     }
 
     public void backToHomeScene(ActionEvent actionEvent) throws IOException {
@@ -225,7 +274,7 @@ public class GameScene {
         Stage stage = (Stage)((Node)actionEvent.getSource()).getScene().getWindow();
 
         stage.setScene(homePageScene);
-        stage.setTitle("Line of Action|Home");
+        stage.setTitle("Line of Action | Home");
         stage.setWidth(600);
         stage.setHeight(300);
         stage.show();

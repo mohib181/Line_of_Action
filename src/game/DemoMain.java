@@ -8,7 +8,7 @@ public class DemoMain {
         Game game = new Game(6);
         game.printBoard();
 
-        ComputerPlayer AI = new ComputerPlayer('w', "Computer");
+        PlayerComputer AI = new PlayerComputer('w', "Computer");
 
         long start = System.currentTimeMillis();
         ArrayList<Position> move = AI.findBestMove(game.getBoard(), depth);
