@@ -31,31 +31,35 @@ public class Game {
     }
 
     public void printBoard() {
+        System.out.println("============================");
         for (char[] chars : board) {
-            for (int j = 0; j < boardSize; j++) {
+            for (int j = 0; j < board.length; j++) {
                 System.out.print(chars[j] + " ");
             }
             System.out.println();
         }
+        System.out.println("============================");
     }
 
     public char[][] getBoard() {
         return board;
     }
 
+    public void setBoard(char[][] board) {
+        this.board = board;
+    }
+
     public int getPieceCount(char color) {
         int pieceCount = 0;
-        for (int i = 0; i < boardSize; i++) {
-            for (int j = 0; j < boardSize; j++) {
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board.length; j++) {
                 if (board[i][j] == color) pieceCount++;
             }
         }
         return pieceCount;
     }
 
-    public boolean isConnected(char color) {
-        int pieceCount = getPieceCount(color);
-
+    public int getConnectedCount(char color) {
         int row = 0, col = 0;
         for (int i = 0; i < board.length; i++) {
             for (int j = 0; j < board.length; j++) {
@@ -101,6 +105,12 @@ public class Game {
                 }
             }
         }
+        return connectedCount;
+    }
+
+    public boolean isConnected(char color) {
+        int pieceCount = getPieceCount(color);
+        int connectedCount = getConnectedCount(color);
 
         //System.out.println("ConnectedCount: " + connectedCount + " pieceCount: " + pieceCount);
         return pieceCount == connectedCount;
