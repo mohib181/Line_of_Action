@@ -8,6 +8,7 @@ import game.PlayerComputer;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.HPos;
+import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -18,6 +19,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -174,6 +176,30 @@ public class GameScene {
         }
     }
 
+    public void makeMoveComputer() {
+        //System.out.println("Computer preparing to make a move");
+        ArrayList<Position> move = playerComputer.findBestMove(game.getBoard(), depth);
+        if (move.size() > 0) {
+            int index;
+            int row = move.get(0).getX();
+            int col = move.get(0).getY();
+            int moveAheadRow = move.get(1).getX();
+            int moveAheadCol = move.get(1).getY();
+            //System.out.println(row + "," + col + "--->" + moveAheadRow + "," + moveAheadCol);
+            moveLabel.setText("Computer:(" + row + "," + col + ")--->(" + moveAheadRow + "," + moveAheadCol + ")");
+
+            index = moveAheadRow*board.getColumnCount()+moveAheadCol;
+            Pane pane = (Pane) board.getChildren().get(index);                  //Destination Pane
+            Circle circle = searchCircleByID(row + "_" + col);           //Source Circle
+
+            if (circle != null) makeMove(circle, pane);
+            else System.out.println("Circle Not Found");
+
+            //System.out.println("Computer has made a move");
+        }
+        else System.out.println("Computer has no move");
+    }
+
     public void makeMove(Circle circle, Pane pane) {
         int row = (int) circle.getProperties().get("gridpane-row");
         int col = (int) circle.getProperties().get("gridpane-column");
@@ -200,6 +226,10 @@ public class GameScene {
         //System.out.println(currentPlayer.getPlayerName() + ": (" + row + "," + col + ")--->(" + moveAheadRow + "," + moveAheadCol + ")" );
         game.printBoard();
 
+        checkWinner();
+    }
+
+    public void checkWinner() {
         char color = (currentPlayer.getPlayerName().equals(player1.getPlayerName())) ? player1.getPlayerColor() : player2.getPlayerColor();
         char opponentColor = (color == 'w') ? 'b' : 'w';
 
@@ -208,13 +238,17 @@ public class GameScene {
             turnLabel.setText(winner.getPlayerName() + "(" + winner.getPlayerColor() + ") has won");
             board.setDisable(true);
             moveLabel.setText("End State reached");
+
+            showWinner(winner.getPlayerName());
             System.out.println("Game Ended");
         }
         else if (game.isConnected(opponentColor)) {
-            winner = (currentPlayer.getPlayerName().equals(player1.getPlayerName())) ? player1 : player2;
+            winner = (currentPlayer.getPlayerName().equals(player1.getPlayerName())) ? player2 : player1;
             turnLabel.setText(winner.getPlayerName() + "(" + winner.getPlayerColor() + ") has won");
             board.setDisable(true);
             moveLabel.setText("End State reached");
+
+            showWinner(winner.getPlayerName());
             System.out.println("Game Ended");
         }
         else {
@@ -223,28 +257,25 @@ public class GameScene {
         }
     }
 
-    public void makeMoveComputer() {
-        //System.out.println("Computer preparing to make a move");
-        ArrayList<Position> move = playerComputer.findBestMove(game.getBoard(), depth);
-        if (move.size() > 0) {
-            int index;
-            int row = move.get(0).getX();
-            int col = move.get(0).getY();
-            int moveAheadRow = move.get(1).getX();
-            int moveAheadCol = move.get(1).getY();
-            //System.out.println(row + "," + col + "--->" + moveAheadRow + "," + moveAheadCol);
-            moveLabel.setText("Computer:(" + row + "," + col + ")--->(" + moveAheadRow + "," + moveAheadCol + ")");
+    public void showWinner(String winnerName) {
+        Stage window = new Stage();
+        window.initModality(Modality.APPLICATION_MODAL);
 
-            index = moveAheadRow*board.getColumnCount()+moveAheadCol;
-            Pane pane = (Pane) board.getChildren().get(index);                  //Destination Pane
-            Circle circle = searchCircleByID(row + "_" + col);           //Source Circle
+        window.setTitle("Winner");
 
-            if (circle != null) makeMove(circle, pane);
-            else System.out.println("Circle Not Found");
+        Label winnerLabel = new Label();
+        winnerLabel.setText(winnerName + " has won");
 
-            //System.out.println("Computer has made a move");
-        }
-        else System.out.println("Computer has no move");
+        Button closeButton = new Button("OK");
+        closeButton.setOnAction(e -> window.close());
+
+        VBox vbox = new VBox(10);
+        vbox.getChildren().addAll(winnerLabel, closeButton);
+        vbox.setAlignment(Pos.CENTER);
+
+        Scene scene = new Scene(vbox, 250, 100);
+        window.setScene(scene);
+        window.showAndWait();
     }
 
     public void clickOnPane(MouseEvent mouseEvent) {

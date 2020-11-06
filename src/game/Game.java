@@ -45,15 +45,11 @@ public class Game {
         return board;
     }
 
-    public void setBoard(char[][] board) {
-        this.board = board;
-    }
-
     public int getPieceCount(char color) {
         int pieceCount = 0;
-        for (int i = 0; i < board.length; i++) {
+        for (char[] chars : board) {
             for (int j = 0; j < board.length; j++) {
-                if (board[i][j] == color) pieceCount++;
+                if (chars[j] == color) pieceCount++;
             }
         }
         return pieceCount;
@@ -61,13 +57,14 @@ public class Game {
 
     public int getConnectedCount(char color) {
         int row = 0, col = 0;
-        for (int i = 0; i < board.length; i++) {
+        boolean found = false;
+        for (int i = 0; i < board.length && !found; i++) {
             for (int j = 0; j < board.length; j++) {
                 if (board[i][j] == color) {
                     row = i;
                     col = j;
 
-                    i += 100;
+                    found = true;
                     break;
                 }
             }

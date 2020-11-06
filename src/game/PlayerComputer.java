@@ -6,15 +6,21 @@ public class PlayerComputer extends Player {
     private final static int MAXVALUE = 100000;
     private final static int MINVALUE = -100000;
 
+    private int scheme;
     private final char opponentColor;
     private final ArrayList<Position> pieces;
     private final ArrayList<Position> opponentPieces;
 
     public PlayerComputer(char playerColor, String playerName) {
         super(playerColor, playerName);
+        scheme = 1;
         opponentColor = (playerColor == 'w') ? 'b' : 'w';
         pieces = new ArrayList<>();
         opponentPieces = new ArrayList<>();
+    }
+
+    public void setScheme(int scheme) {
+        this.scheme = scheme;
     }
 
     private int evaluateBoardPieceTable(char[][] board) {
@@ -92,6 +98,39 @@ public class PlayerComputer extends Player {
         return opponentDensity-myDensity;
     }
 
+    private int getArea(char[][] board, char color) {
+        int i, j = 0;
+        int row = 0, col = 0;
+        boolean found = false;
+        for (i = 0; i < board.length && !found; i++) {
+            for (j = 0; j < board.length; j++) {
+                if (board[i][j] == color) {
+                    row = i;
+                    col = j;
+                    found = true;
+                    break;
+                }
+            }
+        }
+        found = false;
+        for (i = board.length-1; i >= 0 && !found; i--) {
+            for (j = board.length-1; j >= 0; j--) {
+                if (board[i][j] == color) {
+                    found = true;
+                    break;
+                }
+            }
+        }
+
+        return Math.abs(i-row)*Math.abs(j-col);
+    }
+    private int evaluateBoardArea(char[][] board) {
+        int myArea = getArea(board, playerColor);
+        int opponentArea = getArea(board, opponentColor);
+
+        return opponentArea-myArea;
+    }
+
     private int getQuadCount(char[][] board, char color) {
         int count, quadCount = 0;
         for (int i = 0; i < board.length-1; i++) {
@@ -114,9 +153,16 @@ public class PlayerComputer extends Player {
     }
 
     private double evaluateBoard(char[][] board) {
-        return (    evaluateBoardPieceTable(board) * 0.4 +
-                    evaluateBoardDensity(board) * 0.4 +
-                    evaluateBoardQuad(board) * 0.2
+        if (scheme == 1)
+            return ( evaluateBoardPieceTable(board) * 0.4 +
+                     evaluateBoardDensity(board) * 0.4 +
+                     evaluateBoardArea(board) * 0.2
+
+            );
+
+        return ( evaluateBoardPieceTable(board) * 0.4 +
+                 evaluateBoardDensity(board) * 0.4 +
+                 evaluateBoardQuad(board) * 0.2
 
         );
     }
