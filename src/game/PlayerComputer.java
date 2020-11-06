@@ -113,80 +113,6 @@ public class PlayerComputer extends Player {
         return quadCount-opponentQuadCount;
     }
 
-    private int getArea(char[][] board, char color) {
-        int i, j = 0;
-        int row = 0, col = 0;
-        boolean found = false;
-        for (i = 0; i < board.length && !found; i++) {
-            for (j = 0; j < board.length; j++) {
-                if (board[i][j] == color) {
-                    row = i;
-                    col = j;
-                    found = true;
-                    break;
-                }
-            }
-        }
-
-        found = false;
-        for (i = board.length-1; i >= 0 && !found; i--) {
-            for (j = board.length-1; j >= 0; j--) {
-                if (board[i][j] == color) {
-                    found = true;
-                    break;
-                }
-            }
-        }
-
-        return Math.abs(i-row)*Math.abs(j-col);
-    }
-    private int evaluateBoardArea(char[][] board) {
-        int myArea = getArea(board, playerColor);
-        int opponentArea = getArea(board, opponentColor);
-
-        return opponentArea-myArea;
-    }
-
-    private int getMobilityCount(char[][] board, char color) {
-        int mobilityCount = 0;
-        ArrayList<Position> positionArrayList;
-        if (color == playerColor) positionArrayList = pieces;
-        else  positionArrayList = opponentPieces;
-
-        for (Position position: positionArrayList) {
-            mobilityCount += generateMoves(board, position.x, position.y).size();
-        }
-        return mobilityCount;
-    }
-    private int evaluateBoardMobility(char[][] board) {
-        int myMobility = getMobilityCount(board, playerColor);
-        int opponentMobility = getMobilityCount(board, opponentColor);
-
-        return myMobility-opponentMobility;
-    }
-
-    private int getConnectedCount(char[][] board, char color) {
-        int connectedCount = 0;
-        int[] ara = {-1, 0, 1};
-        for (int row = 0; row < board.length; row++) {
-            for (int col = 0; col < board.length; col++) {
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
-                        if (row+ara[i] < 0 || row+ara[i] >= board.length || col+ara[j] < 0 || col+ara[j] >= board.length || (ara[i] == 0 && ara[j] == 0)) continue;
-                        if (board[row+ara[i]][col+ara[j]] == color) connectedCount++;
-                    }
-                }
-            }
-        }
-        return connectedCount;
-    }
-    private int evaluateBoardConnectedness(char[][] board) {
-        int myConnectedCount = getConnectedCount(board, playerColor);
-        int opponentConnectedCount = getConnectedCount(board, opponentColor);
-
-        return myConnectedCount-opponentConnectedCount;
-    }
-
     private double evaluateBoard(char[][] board) {
         return (    evaluateBoardPieceTable(board) * 0.4 +
                     evaluateBoardDensity(board) * 0.4 +
@@ -203,12 +129,6 @@ public class PlayerComputer extends Player {
 
         if (depth == 0) {
             return evaluateBoard(board);
-            //return evaluateBoardPieceTable(board);
-            //return evaluateBoardQuad(board);
-            //return evaluateBoardDensity(board);
-            //return evaluateBoardConnectedness(board);
-            //return evaluateBoardMobility(board);
-            //return evaluateBoardArea(board);
         }
 
         if (isMax) {
