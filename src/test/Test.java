@@ -1,24 +1,21 @@
 package test;
 
 import game.Game;
-import game.PlayerComputer;
 import game.Position;
+import game.PlayerComputer;
 
 import java.util.ArrayList;
-import java.util.Random;
 
 public class Test {
     public static void main(String[] args) {
-        int depth = 5;
-        Game game = new Game(6);
+        int depth = 3;
+        Game game = new Game(8);
         game.printBoard();
 
         PlayerComputer player1 = new PlayerComputer('w', "Computer1");
         PlayerComputer player2 = new PlayerComputer('b', "computer2");
 
-        Random random = new Random(System.currentTimeMillis());
-
-        PlayerComputer currentPlayer = (random.nextInt(100)%2 == 0) ? player1: player2;
+        PlayerComputer currentPlayer = (player1.getPlayerColor() == 'b') ? player1: player2;
 
         while (true) {
             System.out.println(currentPlayer.getPlayerName() + " is making a move");

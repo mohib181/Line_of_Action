@@ -18,6 +18,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -86,6 +87,7 @@ public class GameScene {
 
         currentPlayer = (player1.getPlayerColor() == 'b') ? player1 : player2;
         turnLabel.setText(currentPlayer.getPlayerName() +"'s Turn (" + currentPlayer.getPlayerColor() + ")");
+        moveLabel.setText("");
     }
 
     public void initBoard() {
@@ -168,7 +170,7 @@ public class GameScene {
         }
         turnLabel.setText(currentPlayer.getPlayerName() + "'s Turn (" + currentPlayer.getPlayerColor() + ")");
 
-        if (currentPlayer.getPlayerName().equals("Computer") && playerComputer != null) {
+        if (playerComputer != null && currentPlayer.getPlayerName().equals("Computer")) {
             makeMoveComputer();
         }
     }
@@ -180,22 +182,24 @@ public class GameScene {
         int moveAheadCol = (int) pane.getProperties().get("gridpane-column");
 
         Circle moveAheadCircle = searchCircleByID(moveAheadRow + "_" + moveAheadCol);
-        if (moveAheadCircle != null) board.getChildren().remove(moveAheadCircle);
+        if (moveAheadCircle != null) board.getChildren().remove(moveAheadCircle);                   //removing the circle in target pane if there is any(Capture Move)
 
         board.getChildren().remove(circle);
 
+        //updating circle position
         circle.getProperties().clear();
         circle.getProperties().put("gridpane-row", moveAheadRow);
         circle.getProperties().put("gridpane-column", moveAheadCol);
 
+        //setting up circleID with the new Position
         String circleID = circle.getId().replace("_" + row + "_" + col, "_" + moveAheadRow + "_" + moveAheadCol);
         circle.setId(circleID);
 
         board.getChildren().add(circle);
 
         currentPlayer.makeMove(game.getBoard(), row, col, moveAheadRow, moveAheadCol);
-        System.out.println(currentPlayer.getPlayerName() + ": (" + row + "," + col + ")--->(" + moveAheadRow + "," + moveAheadCol + ")" );
-        //game.printBoard();
+        //System.out.println(currentPlayer.getPlayerName() + ": (" + row + "," + col + ")--->(" + moveAheadRow + "," + moveAheadCol + ")" );
+        game.printBoard();
 
         char color = (currentPlayer.getPlayerName().equals(player1.getPlayerName())) ? player1.getPlayerColor() : player2.getPlayerColor();
         char opponentColor = (color == 'w') ? 'b' : 'w';
@@ -204,12 +208,14 @@ public class GameScene {
             winner = currentPlayer;
             turnLabel.setText(winner.getPlayerName() + "(" + winner.getPlayerColor() + ") has won");
             board.setDisable(true);
+            moveLabel.setText("End State reached");
             System.out.println("Game Ended");
         }
         else if (game.isConnected(opponentColor)) {
             winner = (currentPlayer.getPlayerName().equals(player1.getPlayerName())) ? player1 : player2;
             turnLabel.setText(winner.getPlayerName() + "(" + winner.getPlayerColor() + ") has won");
             board.setDisable(true);
+            moveLabel.setText("End State reached");
             System.out.println("Game Ended");
         }
         else {
@@ -228,6 +234,7 @@ public class GameScene {
             int moveAheadRow = move.get(1).getX();
             int moveAheadCol = move.get(1).getY();
             //System.out.println(row + "," + col + "--->" + moveAheadRow + "," + moveAheadCol);
+            moveLabel.setText("Computer:(" + row + "," + col + ")--->(" + moveAheadRow + "," + moveAheadCol + ")");
 
             index = moveAheadRow*board.getColumnCount()+moveAheadCol;
             Pane pane = (Pane) board.getChildren().get(index);                  //Destination Pane

@@ -1,7 +1,5 @@
 package game;
 
-import javafx.geometry.Pos;
-
 import java.util.ArrayList;
 
 public class PlayerComputer extends Player {
@@ -57,36 +55,7 @@ public class PlayerComputer extends Player {
         return myScore-opponentScore;
     }
 
-    private int evaluateBoardArea(char[][] board) {
-        int i, j = 0;
-        int row = 0, col = 0;
-        boolean found = false;
-        for (i = 0; i < board.length && !found; i++) {
-            for (j = 0; j < board.length; j++) {
-                if (board[i][j] == playerColor) {
-                    row = i;
-                    col = j;
-                    found = true;
-                    break;
-                }
-            }
-        }
-
-        found = false;
-        for (i = board.length-1; i >= 0 && !found; i--) {
-            for (j = board.length-1; j >= 0; j--) {
-                if (board[i][j] == playerColor) {
-                    found = true;
-                    break;
-                }
-            }
-        }
-
-        double area = Math.abs(i-row)*Math.abs(j-col);
-        return (int)(10000/area);
-    }
-
-    private int evaluateBoardDensity(char[][] board) {
+    private double getDensity(char[][] board, char color) {
         int xMass = 0, yMass = 0, xCount = 0, yCount = 0;
         for (int i = 0; i < board.length; i++) {
             for (int j = 0; j < board.length; j++) {
@@ -101,43 +70,133 @@ public class PlayerComputer extends Player {
         double centreX = (double) xMass/xCount;
         double centreY = (double) yMass/yCount;
 
-        double distanceX = 0, distanceY = 0, distance = 0;
-        for (Position piece: pieces) {
+        double distanceX, distanceY, distance = 0;
+
+        ArrayList<Position> positionArrayList;
+        if (color == playerColor)  positionArrayList = pieces;
+        else positionArrayList = opponentPieces;
+
+        for (Position piece: positionArrayList) {
             distanceX = Math.abs(centreX - piece.x);
             distanceY = Math.abs(centreY - piece.y);
             distance += distanceX*distanceX + distanceY*distanceY;
         }
-        distance = distance/pieces.size();
+        distance = distance/positionArrayList.size();
         distance = Math.sqrt(distance);
-        return (int)(10000/distance);
+        return distance;
+    }
+    private double evaluateBoardDensity(char[][] board) {
+        double myDensity = getDensity(board, playerColor);
+        double opponentDensity = getDensity(board, opponentColor);
+
+        return opponentDensity-myDensity;
     }
 
-    private int evaluateBoardMobility(char[][] board) {
+    private int getQuadCount(char[][] board, char color) {
+        int count, quadCount = 0;
+        for (int i = 0; i < board.length-1; i++) {
+            count = 0;
+            for (int j = 0; j < board.length-1; j++) {
+                if (board[i][j] == color) count++;
+                if (board[i][j+1] == color) count++;
+                if (board[i+1][j] == color) count++;
+                if (board[i+1][j+1] == color) count++;
+                if (count >= 3) quadCount++;
+            }
+        }
+        return quadCount;
+    }
+    private int evaluateBoardQuad(char[][] board) {
+        int quadCount = getQuadCount(board, playerColor);
+        int opponentQuadCount = getQuadCount(board, opponentColor);
+
+        return quadCount-opponentQuadCount;
+    }
+
+    private int getArea(char[][] board, char color) {
+        int i, j = 0;
+        int row = 0, col = 0;
+        boolean found = false;
+        for (i = 0; i < board.length && !found; i++) {
+            for (j = 0; j < board.length; j++) {
+                if (board[i][j] == color) {
+                    row = i;
+                    col = j;
+                    found = true;
+                    break;
+                }
+            }
+        }
+
+        found = false;
+        for (i = board.length-1; i >= 0 && !found; i--) {
+            for (j = board.length-1; j >= 0; j--) {
+                if (board[i][j] == color) {
+                    found = true;
+                    break;
+                }
+            }
+        }
+
+        return Math.abs(i-row)*Math.abs(j-col);
+    }
+    private int evaluateBoardArea(char[][] board) {
+        int myArea = getArea(board, playerColor);
+        int opponentArea = getArea(board, opponentColor);
+
+        return opponentArea-myArea;
+    }
+
+    private int getMobilityCount(char[][] board, char color) {
         int mobilityCount = 0;
-        for (Position position: pieces) {
+        ArrayList<Position> positionArrayList;
+        if (color == playerColor) positionArrayList = pieces;
+        else  positionArrayList = opponentPieces;
+
+        for (Position position: positionArrayList) {
             mobilityCount += generateMoves(board, position.x, position.y).size();
         }
         return mobilityCount;
     }
+    private int evaluateBoardMobility(char[][] board) {
+        int myMobility = getMobilityCount(board, playerColor);
+        int opponentMobility = getMobilityCount(board, opponentColor);
 
-    private int evaluateBoardQuad(char[][] board) {
-        return 0;
+        return myMobility-opponentMobility;
     }
 
+    private int getConnectedCount(char[][] board, char color) {
+        int connectedCount = 0;
+        int[] ara = {-1, 0, 1};
+        for (int row = 0; row < board.length; row++) {
+            for (int col = 0; col < board.length; col++) {
+                for (int i = 0; i < 3; i++) {
+                    for (int j = 0; j < 3; j++) {
+                        if (row+ara[i] < 0 || row+ara[i] >= board.length || col+ara[j] < 0 || col+ara[j] >= board.length || (ara[i] == 0 && ara[j] == 0)) continue;
+                        if (board[row+ara[i]][col+ara[j]] == color) connectedCount++;
+                    }
+                }
+            }
+        }
+        return connectedCount;
+    }
     private int evaluateBoardConnectedness(char[][] board) {
-        return 0;
+        int myConnectedCount = getConnectedCount(board, playerColor);
+        int opponentConnectedCount = getConnectedCount(board, opponentColor);
+
+        return myConnectedCount-opponentConnectedCount;
     }
 
-    private int evaluateBoard(char[][] board) {
-        return (int)
-                (   evaluateBoardPieceTable(board) * 0.4 +
-                        evaluateBoardDensity(board) * 0.4 +
-                        evaluateBoardQuad(board) * 0.2
-                );
+    private double evaluateBoard(char[][] board) {
+        return (    evaluateBoardPieceTable(board) * 0.4 +
+                    evaluateBoardDensity(board) * 0.4 +
+                    evaluateBoardQuad(board) * 0.2
+
+        );
     }
 
-    private int minimax(char[][] board, int depth, int alpha, int beta, boolean isMax) {
-        int value;
+    private double minimax(char[][] board, int depth, double alpha, double beta, boolean isMax) {
+        double value;
         char prevValue;
         Position prev;
         ArrayList<Position> moves;
@@ -204,8 +263,8 @@ public class PlayerComputer extends Player {
 
     public ArrayList<Position> findBestMove(char[][] board, int depth) {
         char prevValue;
-        int currMoveVal;
-        int bestMoveVal = -1000;
+        double currMoveVal;
+        double bestMoveVal = MINVALUE;
         int row = -1, col = -1;
         int bestRow = -1, bestCol = -1;
 
@@ -236,7 +295,7 @@ public class PlayerComputer extends Player {
                 piece.y = pos.y;
 
                 currMoveVal = minimax(board, depth, MINVALUE, MAXVALUE, true);
-                //System.out.println("Move: " + prev + "-->" + piece + " Score: " + currMoveVal);
+                //System.out.println("Move: " + prev + "-->" + pos + " Score: " + currMoveVal);
 
                 piece.x = prev.x;
                 piece.y = prev.y;

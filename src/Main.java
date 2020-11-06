@@ -1,5 +1,3 @@
-package game;
-
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -10,7 +8,7 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception{
-        Parent root = FXMLLoader.load(getClass().getResource("../gui/homeScene.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("gui/homeScene.fxml"));
         primaryStage.setTitle("Line of Action | Home");
         primaryStage.setScene(new Scene(root, 600, 300));
         primaryStage.show();
